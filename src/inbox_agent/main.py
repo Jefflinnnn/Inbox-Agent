@@ -38,12 +38,16 @@ def run_sync_cycle():
     state = StateDB(settings.db_path)
     run_id = state.start_sync_run()
 
-    outlook = OutlookClient(
-        tenant_id=settings.ms_tenant_id,
-        client_id=settings.ms_client_id,
-        client_secret=settings.ms_client_secret,
-        token_path=settings.token_path,
-    )
+    outlook_enabled = bool(settings.ms_tenant_id and settings.ms_client_id)
+    outlook = None
+    if outlook_enabled:
+        outlook = OutlookClient(
+            tenant_id=settings.ms_tenant_id,
+            client_id=settings.ms_client_id,
+            client_secret=settings.ms_client_secret,
+            token_path=settings.token_path,
+        )
+
     notion = NotionClient(
         api_key=settings.notion_api_key,
         kanban_db_id=settings.notion_kanban_db_id,
@@ -55,21 +59,24 @@ def run_sync_cycle():
     total_tasks = 0
     total_errors = 0
 
-    # Flow 1: Process emails
-    try:
-        email_proc = EmailProcessor(
-            outlook=outlook,
-            notion=notion,
-            claude=claude,
-            state=state,
-            max_emails=settings.max_emails_per_run,
-        )
-        emails_processed, email_tasks = email_proc.process()
-        total_emails = emails_processed
-        total_tasks += email_tasks
-    except Exception as e:
-        logger.error("email_flow_failed", error=str(e))
-        total_errors += 1
+    # Flow 1: Process emails (only if Outlook is configured)
+    if outlook:
+        try:
+            email_proc = EmailProcessor(
+                outlook=outlook,
+                notion=notion,
+                claude=claude,
+                state=state,
+                max_emails=settings.max_emails_per_run,
+            )
+            emails_processed, email_tasks = email_proc.process()
+            total_emails = emails_processed
+            total_tasks += email_tasks
+        except Exception as e:
+            logger.error("email_flow_failed", error=str(e))
+            total_errors += 1
+    else:
+        logger.info("outlook_skipped", reason="not configured")
 
     # Flow 2: Process meeting notes
     try:

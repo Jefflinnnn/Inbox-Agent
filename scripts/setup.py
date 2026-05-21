@@ -305,13 +305,30 @@ def run_first_sync(venv_path: Path):
 def main():
     print_header("Inbox Agent Setup")
     print("This script will walk you through configuring the Inbox Agent.")
-    print("You'll need browser access for OAuth and your Notion workspace open.")
+    print("You'll need your Notion workspace open in a browser.")
 
     # Step 1: venv
     venv_path = setup_venv()
 
-    # Steps 2-4: Collect credentials
-    ms_config = setup_microsoft_graph()
+    # Step 2: Outlook (optional)
+    print_step(2, "Microsoft Graph (Outlook) — Optional")
+    print("  Outlook integration requires an Azure app registration.")
+    print("  If you don't have access (e.g. SSO-restricted), skip this.")
+    print("  You can still add tasks manually or paste emails via the CLI.\n")
+    outlook_choice = input("  Set up Outlook now? (y/n): ").strip().lower()
+
+    ms_config = {}
+    if outlook_choice == "y":
+        ms_config = setup_microsoft_graph()
+    else:
+        print("  Skipping Outlook. You can set it up later by re-running this script.")
+        ms_config = {
+            "MS_TENANT_ID": "",
+            "MS_CLIENT_ID": "",
+            "MS_CLIENT_SECRET": "",
+        }
+
+    # Steps 3-4: Notion + Claude
     notion_config = setup_notion()
     claude_config = setup_claude()
 
@@ -320,7 +337,8 @@ def main():
     write_env_file(all_config)
 
     # Step 6: Validate connections
-    validate_outlook(all_config, venv_path)
+    if outlook_choice == "y":
+        validate_outlook(all_config, venv_path)
     validate_notion(all_config, venv_path)
     validate_claude(all_config, venv_path)
 
@@ -342,10 +360,12 @@ def main():
     print(f"  Database: {PROJECT_DIR / 'state.db'}")
     print(f"  Config: {ENV_FILE}")
     print()
-    print("  Manual commands:")
-    print(f"    Run now:    {venv_path}/bin/python -m inbox_agent.main")
-    print(f"    Stop cron:  launchctl unload {PLIST_DEST}")
-    print(f"    Start cron: launchctl load {PLIST_DEST}")
+    print("  Commands:")
+    print(f"    Run sync:      {venv_path}/bin/python -m inbox_agent.main")
+    print(f"    Add task:      {venv_path}/bin/python -m inbox_agent.cli add")
+    print(f"    Process email: {venv_path}/bin/python -m inbox_agent.cli email")
+    print(f"    Stop cron:     launchctl unload {PLIST_DEST}")
+    print(f"    Start cron:    launchctl load {PLIST_DEST}")
     print()
 
 

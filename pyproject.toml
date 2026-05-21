@@ -23,6 +23,7 @@ dev = [
 
 [project.scripts]
 inbox-agent = "inbox_agent.main:cli"
+inbox-agent-cli = "inbox_agent.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -6,10 +6,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
-    # Microsoft Graph
-    ms_tenant_id: str
-    ms_client_id: str
-    ms_client_secret: str
+    # Microsoft Graph (optional — leave blank to skip Outlook)
+    ms_tenant_id: str = ""
+    ms_client_id: str = ""
+    ms_client_secret: str = ""
 
     # Notion
     notion_api_key: str
