@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jefflin.inbox-agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/jefflin/Projects/inbox-agent/.venv/bin/python</string>
+        <string>-m</string>
+        <string>inbox_agent.main</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jefflin/Projects/inbox-agent</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONPATH</key>
+        <string>/Users/jefflin/Projects/inbox-agent/src</string>
+        <key>HOME</key>
+        <string>/Users/jefflin</string>
+    </dict>
+
+    <key>StartInterval</key>
+    <integer>900</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/jefflin/Projects/inbox-agent/logs/stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/jefflin/Projects/inbox-agent/logs/stderr.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
