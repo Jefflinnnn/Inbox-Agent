@@ -37,22 +37,50 @@ def prompt(label: str, secret: bool = False) -> str:
     return input(f"  {label}: ").strip()
 
 
+def find_python() -> str:
+    """Find a Python >= 3.11 interpreter."""
+    candidates = ["python3.13", "python3.12", "python3.11"]
+    for name in candidates:
+        path = shutil.which(name)
+        if path:
+            return path
+    # Fall back to python3 and check version
+    python3 = shutil.which("python3")
+    if python3:
+        result = subprocess.run(
+            [python3, "-c", "import sys; print(sys.version_info[:2])"],
+            capture_output=True, text=True,
+        )
+        version = eval(result.stdout.strip())
+        if version >= (3, 11):
+            return python3
+    print("  ERROR: Python 3.11+ is required but not found.")
+    print("  Install via: brew install python@3.13")
+    sys.exit(1)
+
+
 def setup_venv():
     print_step(1, "Setting up Python virtual environment")
+    python = find_python()
+    print(f"  Using: {python}")
+
     venv_path = PROJECT_DIR / ".venv"
     if venv_path.exists():
         print("  Virtual environment already exists, skipping.")
     else:
-        subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+        subprocess.run([python, "-m", "venv", str(venv_path)], check=True)
         print("  Created .venv")
 
     pip = venv_path / "bin" / "pip"
     print("  Installing dependencies...")
-    subprocess.run(
+    result = subprocess.run(
         [str(pip), "install", "-e", str(PROJECT_DIR)],
-        check=True,
         capture_output=True,
+        text=True,
     )
+    if result.returncode != 0:
+        print(f"  Install failed:\n{result.stderr}")
+        sys.exit(1)
     print("  Dependencies installed.")
     return venv_path
 
